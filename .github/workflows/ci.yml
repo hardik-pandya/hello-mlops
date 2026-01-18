@@ -1,0 +1,43 @@
+name: CI - Train and Save the Model
+
+on: 
+  push: 
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  matrix-pip:
+    name: Train and Save Model - Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.11,3.12]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Train and save the model
+        run: |
+          python train_model.py --output_path model.pkl
+          ls -al artifacts/
+
+      - name: Upload model artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-artifacts-${{ matrix.python-version }}-${{github.run_id}}
+          path: artifacts/
+
